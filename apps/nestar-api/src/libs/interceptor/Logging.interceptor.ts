@@ -13,11 +13,12 @@ public intercept(context: ExecutionContext, next: CallHandler): Observable<any> 
     const requestType = context.getType<GqlContextType>();
 
     if(requestType === 'http'){
-      /*develop if needed*/  
+      /*develop if needed*/ 
+      return next.handle().pipe()
     } else if(requestType === 'graphql'){
         /* (1)Print request  */ 
-        const GqlContext = GqlExecutionContext.create(context)
-        this.logger.log(`${this.stringify(GqlContext.getContext().req.body)}`, 'REQUEST')
+        const gqlContext = GqlExecutionContext.create(context)
+        this.logger.log(`${this.stringify(gqlContext.getContext().req.body)}`, 'REQUEST')
          
         /* (2)Error handling via graphql */ 
         
@@ -29,10 +30,10 @@ public intercept(context: ExecutionContext, next: CallHandler): Observable<any> 
         }),
       );
     }
+    return next.handle();
   }
   private stringify(context: ExecutionContext): string{
     console.log(typeof context);
     return JSON.stringify(context).slice(0,75);
   }
-
 }
