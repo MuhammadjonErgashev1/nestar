@@ -88,7 +88,7 @@ export class MemberResolver {
 
      // autorization: Admin
     @Roles(MemberType.ADMIN)
-    @Query(()=>Members)
+    @UseGuards(RolesGuard)
     @Mutation(()=>Member)
     public async updateMemberByAdmin( @Args('input') input:MemberUpdate): Promise<Member>{
         console.log('Mutation: updateMemberByAdmin');
