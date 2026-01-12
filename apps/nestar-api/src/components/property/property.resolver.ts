@@ -84,7 +84,7 @@ export class PropertyResolver {
     ): Promise<Properties> {
     console.log('Query: getAllPropertiesByAdmin');
     return await this.propertyService.getAllPropertiesByAdmin(input);
-}
+    }
 
     @Roles(MemberType.ADMIN)
     @UseGuards(RolesGuard)
@@ -96,6 +96,16 @@ export class PropertyResolver {
     // ID-ni MongoDB ObjectId formatiga o'tkazish
     input._id = shapeIntoMongoObjectId(input._id);
     return await this.propertyService.updatePropertyByAdmin(input);
-}
+    }
+    @Roles(MemberType.ADMIN)
+    @UseGuards(RolesGuard)
+    @Mutation((returns) => Property)
+    public async removePropertyByAdmin(
+    @Args('propertyId') input: string
+    ): Promise<Property> {
+    console.log('Mutation: removePropertyByAdmin');
+    const propertyId = shapeIntoMongoObjectId(input);
+    return await this.propertyService.removePropertyByAdmin(propertyId);
+    }
 
 }
