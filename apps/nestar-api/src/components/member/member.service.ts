@@ -12,6 +12,7 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { ViewService } from '../view/view.service';
 import { ViewGroup } from '../../libs/enums/view.enum';
 
+
 @Injectable()
 export class MemberService {
 
@@ -163,4 +164,6 @@ export class MemberService {
             {new: true})
         .exec()
      }
+
+   
 }

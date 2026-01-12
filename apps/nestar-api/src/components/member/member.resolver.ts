@@ -80,8 +80,8 @@ export class MemberResolver {
 
     // autorization: Admin
     @Roles(MemberType.ADMIN)
-    @Query(()=>Members)
     @UseGuards(RolesGuard)
+    @Query(()=>Members)
     public async getAllMembersByAdmin(@Args('input') input: MembersInquiry ): Promise<Members>{
         
         console.log('Query: getAllMembersByAdmin');
@@ -100,7 +100,7 @@ export class MemberResolver {
 
     /** IMAGE UPLOADER **/ 
 
-    @UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 @Mutation((returns) => String)
 public async imageUploader(
 	@Args({ name: 'file', type: () => GraphQLUpload })
