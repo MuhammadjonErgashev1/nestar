@@ -70,7 +70,7 @@ export class PropertyUpdate{
 
     soldAt?: Date;
 
-    deleteAt?: Date;
+    deletedAt?: Date;
    
     @IsOptional()
     @Field(() => Date, {nullable: true})

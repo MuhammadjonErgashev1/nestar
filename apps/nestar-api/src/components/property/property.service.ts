@@ -75,7 +75,7 @@ export class PropertyService {
         }
 
     public async updateProperty(memberId: ObjectId, input: PropertyUpdate): Promise<Property>{
-        let {propertyStatus, soldAt, deleteAt} = input;
+        let {propertyStatus, soldAt, deletedAt} = input;
         const search: T = {
             _id: input._id,
             memberId: memberId,
@@ -83,7 +83,7 @@ export class PropertyService {
         };
 
         if(propertyStatus === PropertyStatus.SOLD) soldAt = moment().toDate();
-        if(propertyStatus === PropertyStatus.DELETE) deleteAt = moment().toDate();
+        if(propertyStatus === PropertyStatus.DELETE) deletedAt = moment().toDate();
 
         const result = await this.propertyModel
         .findOneAndUpdate(search, input, {
@@ -92,7 +92,7 @@ export class PropertyService {
         .exec()
         if(!result) throw new InternalServerErrorException(Message.UPDATE_FAILED)
 
-            if(soldAt || deleteAt){
+            if(soldAt || deletedAt){
                 await this.memberService.membersStatsEditor({
                     _id: memberId,
                     targetKey: 'memberProperties',
@@ -230,6 +230,38 @@ public async getAllPropertiesByAdmin(input: AllPropertiesInquiry): Promise<Prope
 
     if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
     return result[0];
+}
+
+public async updatePropertyByAdmin(input: PropertyUpdate): Promise<Property> {
+    let { propertyStatus, soldAt, deletedAt } = input;
+    const search: T = {
+        _id: input._id,
+        propertyStatus: PropertyStatus.ACTIVE,
+    };
+
+    // Agar status SOLD bo'lsa, sotilgan vaqtni hozirgi vaqtga sozlash
+    if (propertyStatus === PropertyStatus.SOLD) soldAt = moment().toDate();
+    // Agar status DELETE bo'lsa, o'chirilgan vaqtni hozirgi vaqtga sozlash
+    else if (propertyStatus === PropertyStatus.DELETE) deletedAt = moment().toDate();
+
+    const result = await this.propertyModel
+        .findOneAndUpdate(search, input, {
+            new: true,
+        })
+        .exec();
+
+    if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+
+    // Agar mulk sotilsa yoki o'chirilsa, foydalanuvchi statistikasidagi mulklar sonini kamaytirish
+    if (soldAt || deletedAt) {
+        await this.memberService.membersStatsEditor({
+            _id: result.memberId,
+            targetKey: 'memberProperties',
+            modifier: -1,
+        });
+    }
+
+    return result;
 }
 
 }
