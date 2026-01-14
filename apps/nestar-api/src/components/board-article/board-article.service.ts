@@ -1,9 +1,158 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { BoardArticle } from '../../libs/dto/board-article/board-article';
+import { Model, ObjectId } from 'mongoose';
+import { BoardArticle, BoardArticles } from '../../libs/dto/board-article/board-article';
+import { MemberService } from '../member/member.service';
+import { ViewService } from '../view/view.service';
+import { BoardArticleInput, BoardArticlesInquiry } from '../../libs/dto/board-article/board-article.input';
+import { Direction, Message } from '../../libs/enums/common.enum';
+import { ViewGroup } from '../../libs/enums/view.enum';
+import { BoardArticleStatus } from '../../libs/enums/board-article.enum';
+import { StatisticModifier, T } from '../../libs/types/common';
+import { BoardArticleUpdate } from '../../libs/dto/board-article/board-article.update';
+import { lookupMember } from '../../libs/config';
 
 @Injectable()
 export class BoardArticleService {
-    constructor(@InjectModel('BoardArticle') private readonly boardArticleModel: Model<BoardArticle>){}
+    constructor(@InjectModel('BoardArticle') private readonly boardArticleModel: Model<BoardArticle>,
+    private readonly memberService: MemberService,
+    private readonly viewService: ViewService,
+    ){}
+
+    public async createBoardArticle(memberId: ObjectId, input: BoardArticleInput): Promise<BoardArticle> {
+    // Maqolaga muallif ID sini biriktirish
+    input.memberId = memberId;
+
+    try {
+        // Ma'lumotlar bazasida yangi maqola yaratish
+        const result = await this.boardArticleModel.create(input);
+
+        // Muallifning statistikasini yangilash (maqolalar sonini +1 ga oshirish)
+        await this.memberService.membersStatsEditor({
+            _id: memberId,
+            targetKey: 'memberArticles',
+            modifier: 1,
+        });
+
+        return result;
+    } catch (err) {
+        console.log('Error, Service.model:', err.message);
+        throw new BadRequestException(Message.CREATE_FAILED);
+    }
+}
+public async getBoardArticle(memberId: ObjectId, articleId: ObjectId): Promise<BoardArticle> {
+    const search: T = {
+        _id: articleId,
+        articleStatus: BoardArticleStatus.ACTIVE,
+    };
+    
+    const targetBoardArticle: BoardArticle = await this.boardArticleModel
+        .findOne(search)
+        .lean()
+        .exec();
+
+    if (!targetBoardArticle) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+    // Agar foydalanuvchi tizimga kirgan bo'lsa, ko'rishlar statistikasini yuritish
+    if (memberId) {
+        const viewInput = { 
+            memberId: memberId, 
+            viewRefId: articleId, 
+            viewGroup: ViewGroup.ARTICLE 
+        };
+        const newView = await this.viewService.recordView(viewInput);
+        
+        if (newView) {
+            await this.boardArticleStatsEditor({ 
+                _id: articleId, 
+                targetKey: 'articleViews', 
+                modifier: 1 
+            });
+            targetBoardArticle.articleViews++;
+        }
+        //meliked
+    }
+
+    // Maqola muallifi haqidagi ma'lumotlarni biriktirish
+    targetBoardArticle.memberData = await this.memberService.getMember(null, targetBoardArticle.memberId);
+
+    return targetBoardArticle;
+}
+public async boardArticleStatsEditor(input: StatisticModifier): Promise<BoardArticle> {
+    const { _id, targetKey, modifier } = input;
+    
+    // Maqolani ID orqali topish va ko'rsatilgan maydonni (targetKey) modifier qiymatiga o'zgartirish
+    const result = await this.boardArticleModel
+        .findByIdAndUpdate(
+            _id, 
+            { $inc: { [targetKey]: modifier } }, // $inc operatori qiymatni qo'shish yoki ayirish uchun
+            { new: true } // Yangilangan ma'lumotni qaytarish
+        )
+        .exec();
+
+    // Agar maqola topilmasa yoki yangilashda xatolik bo'lsa
+    if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+
+    return result;
+}
+
+public async updateBoardArticle(memberId: ObjectId, input: BoardArticleUpdate): Promise<BoardArticle> {
+    const { _id, articleStatus } = input;
+    
+    // Faqat o'ziga tegishli va ACTIVE holatdagi maqolani tahrirlash mumkin
+    const result = await this.boardArticleModel
+        .findOneAndUpdate(
+            { _id: _id, memberId: memberId, articleStatus: BoardArticleStatus.ACTIVE }, 
+            input, 
+            { new: true }
+        )
+        .exec();
+
+    if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+
+    // Agar maqola DELETE qilinsa, foydalanuvchining maqolalar soni statistikasini kamaytirish
+    if (articleStatus === BoardArticleStatus.DELETE) {
+        await this.memberService.membersStatsEditor({
+            _id: memberId,
+            targetKey: 'memberArticles',
+            modifier: -1,
+        });
+    }
+
+    return result;
+}
+
+public async getBoardArticles(memberId: ObjectId, input: BoardArticlesInquiry): Promise<BoardArticles> {
+    const { articleCategory, text } = input.search;
+    const match: T = { articleStatus: BoardArticleStatus.ACTIVE }; // Faqat faol maqolalar
+    const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
+
+    // Qidiruv filtrlari
+    if (articleCategory) match.articleCategory = articleCategory;
+    if (text) match.articleTitle = { $regex: new RegExp(text, 'i') };
+
+    const result = await this.boardArticleModel
+        .aggregate([
+            { $match: match },
+            { $sort: sort },
+            {
+                $facet: {
+                    list: [
+                        { $skip: (input.page - 1) * input.limit },
+                        { $limit: input.limit },
+                        // Muallif ma'lumotlarini ulash
+                        lookupMember, 
+                        { $unwind: '$memberData' },
+                    ],
+                    metaCounter: [{ $count: 'total' }],
+                },
+            },
+        ])
+        .exec();
+
+    if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+    return result[0];
+}
+
 }
