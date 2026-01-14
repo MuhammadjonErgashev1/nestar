@@ -117,4 +117,10 @@ public async getComments(memberId: ObjectId, input: CommentsInquiry): Promise<Co
 
     return result[0];
 }
+
+public async removeCommentByAdmin(input: ObjectId): Promise<Comment> {
+    const result = await this.commentModel.findByIdAndDelete(input).exec();
+    if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);
+    return result;
+}
 }
