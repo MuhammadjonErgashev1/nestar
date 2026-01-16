@@ -96,7 +96,13 @@ export class MemberService {
             const newView = await this.viewService.recordView(viewInput)
             if(newView){
                 await this.memberModel.findByIdAndUpdate(search,{$inc: {memberViews: 1}}, {new: true} ).exec()
+                targetMember.memberViews++;
             }
+
+            //meliked
+            const likeInput = {memberId: memberId, likeRefId: targetId, likeGroup: LikeGroup.MEMBER}
+            targetMember.meLiked = await this.likeService.checkLikeExistence(likeInput)
+            //meFollowed
          }   
         
 
