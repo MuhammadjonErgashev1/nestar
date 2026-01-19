@@ -6,6 +6,8 @@ import { MemberService } from '../member/member.service';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { FollowInquiry } from '../../libs/dto/follow/follow.input';
 import { T } from '../../libs/types/common';
+import { lookupAuthMemberLiked, lookupFollowerData, lookupFollowingData } from '../../libs/config';
+import { lookup } from 'dns';
 
 @Injectable()
 export class FollowService {
@@ -93,15 +95,9 @@ public async getMemberFollowings(memberId: ObjectId, input: FollowInquiry): Prom
                     list: [
                         { $skip: (page - 1) * limit },
                         { $limit: limit },
+                        lookupAuthMemberLiked(memberId, "$followiingId"),
                         // meLiked va meFollowed lookup-lari shu yerga qo'shiladi
-                        {
-                            $lookup: {
-                                from: 'members',
-                                localField: 'followingId',
-                                foreignField: '_id',
-                                as: 'followingData',
-                            },
-                        },
+                        lookupFollowingData,
                         { $unwind: '$followingData' },
                     ],
                     metaCounter: [{ $count: 'total' }],
@@ -133,15 +129,9 @@ public async getMemberFollowers(memberId: ObjectId, input: FollowInquiry): Promi
                         { $skip: (page - 1) * limit },
                         { $limit: limit },
                         //meliked
+                         lookupAuthMemberLiked(memberId, "$followerId"),
                         //mefollowed
-                        {
-                            $lookup: {
-                                from: 'members',
-                                localField: 'followerId',
-                                foreignField: '_id',
-                                as: 'followerData',
-                            },
-                        },
+                        lookupFollowerData,
                         { $unwind: '$followerData' },
                     ],
                     metaCounter: [{ $count: 'total' }],
