@@ -1,6 +1,6 @@
 import { BadRequestException, CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../auth.service';
-import { Message } from 'apps/nestar-api/src/libs/enums/common.enum';
+import { Message } from '../../../libs/enums/common.enum';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -15,7 +15,6 @@ export class AuthGuard implements CanActivate {
 			const bearerToken = request.headers.authorization;
 			if (!bearerToken) throw new BadRequestException(Message.TOKEN_NOT_EXIST);
 
-			// console.log("beareToken=>",  bearerToken);
 			const token = bearerToken.split(' ')[1],
 				authMember = await this.authService.verifyToken(token);
 			if (!authMember) throw new UnauthorizedException(Message.NOT_AUTHENTICATED);
@@ -27,6 +26,5 @@ export class AuthGuard implements CanActivate {
 		}
 
 		// description => http, rpc, gprs and etc are ignored
-		
 	}
 }

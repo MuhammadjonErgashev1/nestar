@@ -1,98 +1,97 @@
-import { Field,  Int,  ObjectType } from "@nestjs/graphql";
-import {ObjectId} from 'mongoose'
-import { PropertyLocation, PropertyStatus, PropertyType } from "../../enums/property.enum";
-import { Member, TotalCounter } from "../member/member";
-import { MeLiked } from "../like/like";
+import { Field, Int, ObjectType } from '@nestjs/graphql';
+import type { ObjectId } from 'mongoose';
+import { PropertyLocation, PropertyStatus, PropertyType } from '../../enums/property.enum';
+import { Member, TotalCounter } from '../member/member';
+import { MeLiked } from '../like/like';
 
 @ObjectType()
-export class Property{
-    @Field(() => String)
-    _id: ObjectId;
+export class Property {
+	@Field(() => String)
+	_id: ObjectId;
 
-    @Field(() => PropertyType)
-    propertyType: PropertyType
-      
-    @Field(() => PropertyStatus)
-    propertyStatus: PropertyStatus
-      
-    @Field(() => PropertyLocation)
-    propertyLocation: PropertyLocation
-      
-    @Field(() => String)
-    propertyAddress: string;
-    
-    @Field(() => String)
-    propertyTitle: string;
-    
-    @Field(() => Number)
-    propertyPrice: number;
+	@Field(() => PropertyType)
+	propertyType: PropertyType;
 
-    @Field(() => Number)
-    propertySquare: number;
+	@Field(() => PropertyStatus)
+	propertyStatus: PropertyStatus;
 
-    @Field(() => Int)
-    propertyBeds: number;
+	@Field(() => PropertyLocation)
+	propertyLocation: PropertyLocation;
 
-    @Field(() => Int)
-    propertyRooms: number;
+	@Field(() => String)
+	propertyAddress: string;
 
-    @Field(() => Int)
-    propertyViews: number;
+	@Field(() => String)
+	propertyTitle: string;
 
-    @Field(() => Int)
-    propertyLikes: number;
+	@Field(() => Number)
+	propertyPrice: number;
 
-    @Field(() => Int)
-    propertyComments: number;
+	@Field(() => Number)
+	propertySquare: number;
 
-    @Field(() => Int)
-    propertyRank: number;
+	@Field(() => Int)
+	propertyBeds: number;
 
-    @Field(() => [String])
-    propertyImages: string[];
+	@Field(() => Int)
+	propertyRooms: number;
 
-    @Field(() => String, {nullable: true})
-    propertyDesc?: string;
-   
-    @Field(() => Boolean)
-    propertyBarter: number;
-   
-   @Field(() => Boolean)
-    propertyRent: number;
-   
-    @Field(() => String)
-    memberId: ObjectId;
-   
-   @Field(() => Date, {nullable: true})
-    soldAt?: Date;
+	@Field(() => Int)
+	propertyViews: number;
 
-    @Field(() => Date, {nullable: true})
-    deletedAt?: Date;
+	@Field(() => Int)
+	propertyLikes: number;
 
-   @Field(() => Date, {nullable: true})
-    constructedAt?: Date;
+	@Field(() => Int)
+	propertyComments: number;
 
-    @Field(() => Date)
-    createdAt: Date;
-    
-    @Field(() => Date)
-    updatedAt: Date;
+	@Field(() => Int)
+	propertyRank: number;
 
-    /** from aggregation **/ 
+	@Field(() => [String])
+	propertyImages: string[];
 
-    @Field(() => Member, {nullable: true})
-    memberData?: Member;
+	@Field(() => String, { nullable: true })
+	propertyDesc?: string;
 
-    @Field(() => [MeLiked],{nullable:true})
-    meLiked?:MeLiked[];  
+	@Field(() => Boolean)
+	propertyBarter: boolean;
+
+	@Field(() => Boolean)
+	propertyRent: boolean;
+
+	@Field(() => String)
+	memberId: ObjectId;
+
+	@Field(() => Date, { nullable: true })
+	soldAt?: Date;
+
+	@Field(() => Date, { nullable: true })
+	deletedAt?: Date;
+
+	@Field(() => Date, { nullable: true })
+	constructedAt?: Date;
+
+	@Field(() => Date)
+	createdAt: Date;
+
+	@Field(() => Date)
+	updatedAt: Date;
+
+	/** from aggregation **/
+
+	@Field(() => [MeLiked], { nullable: true })
+	meLiked?: MeLiked[];
+
+	@Field(() => Member, { nullable: true })
+	memberData?: Member;
 }
 
- @ObjectType()
-    export class Properties {
-        @Field(() => [Property])
-        list: Property[];
+@ObjectType()
+export class Properties {
+	@Field(() => [Property])
+	list: Property[];
 
-        @Field(() => [TotalCounter], {nullable: true})
-        metaCounter: TotalCounter[];
-    }
-
+	@Field(() => [TotalCounter], { nullable: true })
+	metaCounter: TotalCounter[];
+}

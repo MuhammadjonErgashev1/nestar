@@ -1,111 +1,107 @@
-import { Field, Int, ObjectType } from "@nestjs/graphql";
-import {ObjectId} from 'mongoose'
-import { MemberAuthType, MemberStatus, MemberType } from "../../enums/member.enum";
-import { MeLiked } from "../like/like";
-import { MeFollowed } from "../follow/follow";
-
-
+import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { MemberAuthType, MemberStatus, MemberType } from '../../enums/member.enum';
+import type { ObjectId } from 'mongoose';
+import { MeLiked } from '../like/like';
+import { MeFollowed } from '../follow/follow';
 
 @ObjectType()
-export class Member{
-    @Field(() => String)
-    _id: ObjectId;
+export class Member {
+	@Field(() => String)
+	_id: ObjectId;
 
-    @Field(() => String)
-     memberType: MemberType;
+	@Field(() => MemberType)
+	memberType: MemberType;
 
-    @Field(() => String)
-      memberStatus: MemberStatus;
-    
-    @Field(() => String)
-    memberAuthType: MemberAuthType;
+	@Field(() => MemberStatus)
+	memberStatus: MemberStatus;
 
-    @Field(() => String)
-    memberPhone: string;
+	@Field(() => MemberAuthType)
+	memberAuthType: MemberAuthType;
 
-    @Field(() => String)
-    memberNick: string;
+	@Field(() => String)
+	memberPhone: string;
 
-    memberPassword?: string;
+	@Field(() => String)
+	memberNick: string;
 
+	memberPassword?: string; /** ⚠️ Parolni GraphQL schema’da ko’rsatmaymiz. Shuning uchun @Field() qo’ymaymiz.*/
 
-    @Field(() => String,{nullable:true})
-    memberFullName: string;
+	@Field(() => String, { nullable: true })
+	memberFullName?: string;
 
-    @Field(() => String)
-    memberImage:string;
+	@Field(() => String)
+	memberImage: string;
 
-    @Field(() => String, {nullable:true})
-    memberAddress?:string;
-    
-    @Field(() => String, {nullable:true})
-    memberDesc?:string;
+	@Field(() => String, { nullable: true })
+	memberAddress?: string;
 
-    @Field(() => Int)
-    memberProperties: number;
-    
-    @Field(() => Int)
-    memberArticles: number;
-    
-    @Field(() => Int)
-    memberFollowers: number;
-    
-    @Field(() => Int)
-    memberFollowings: number;
-    
-    @Field(() => Int)
-    memberPoints: number;
-    
-    @Field(() => Int)
-    memberLikes: number;
-    
-    @Field(() => Int)
-    memberViews: number;
-    
-    @Field(() => Int)
-    memberComments: number;
-    
-    @Field(() => Int)
-    memberRank: number;
-    
-    @Field(() => Int)
-    memberWarnings: number;
-    
-    @Field(() => Int)
-    memberBlocks: number;
+	@Field(() => String, { nullable: true })
+	memberDesc?: string;
 
-    @Field(() => Date, {nullable:true})
-    deletedAt: Date;
-    
-    @Field(() => Date)
-    createdAt: Date;
-    
-    @Field(() => Date)
-    updatedAt: Date;
+	@Field(() => Int)
+	memberProperties: number;
 
-     @Field(() => String,{nullable:true})
-     accessToken?: string;
+	@Field(() => Int)
+	memberArticles: number;
 
-    /* from aggregation */
-    
-    @Field(() => [MeLiked],{nullable:true})
-    meLiked?:MeLiked[];  
-    
-    @Field(() => [MeFollowed],{nullable:true})
-    meFollowed?:MeFollowed[];  
+	@Field(() => Int)
+	memberFollowers: number;
+
+	@Field(() => Int)
+	memberFollowings: number;
+
+	@Field(() => Int)
+	memberPoints: number;
+
+	@Field(() => Int)
+	memberLikes: number;
+
+	@Field(() => Int)
+	memberViews: number;
+
+	@Field(() => Int)
+	memberComments: number;
+
+	@Field(() => Int)
+	memberRank: number;
+
+	@Field(() => Int)
+	memberWarnings: number;
+
+	@Field(() => Int)
+	memberBlocks: number;
+
+	@Field(() => Date, { nullable: true })
+	deletedAt?: Date;
+
+	@Field(() => Date)
+	createdAt: Date;
+
+	@Field(() => Date)
+	updatedAt: Date;
+
+	@Field(() => String, { nullable: true })
+	accessToken?: string;
+
+	/** from aggregation **/
+	@Field(() => [MeLiked], { nullable: true })
+	meLiked?: MeLiked[];
+
+	@Field(() => [MeFollowed], { nullable: true })
+	meFollowed?: MeFollowed[];
 }
 
 @ObjectType()
 export class TotalCounter {
-  @Field(() => Int, {nullable: true})
-  total?: number; 
+	@Field(() => Int, { nullable: true })
+	total: number;
 }
 
 @ObjectType()
 export class Members {
-  @Field(() => [Member])
-  list: Member[];
+	@Field(() => [Member])
+	list: Member[];
 
-  @Field(()=>[TotalCounter], {nullable: true})
-  metaCounter: TotalCounter[]
+	@Field(() => [TotalCounter], { nullable: true })
+	metaCounter?: TotalCounter[];
 }
